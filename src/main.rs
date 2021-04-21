@@ -1,0 +1,75 @@
+extern crate gdk;
+extern crate gio;
+extern crate glib;
+extern crate gtk;
+
+use gio::prelude::*;
+use gtk::prelude::*;
+
+use std::env;
+use std::str;
+
+fn main() {
+    let application = gtk::Application::new(
+        Some("com.github.architbhonsle.gtk-rs-experiment"),
+        Default::default(),
+    )
+    .unwrap();
+
+    application.connect_activate(build_ui);
+
+    application.run(&env::args().collect::<Vec<_>>());
+}
+
+fn build_ui(application: &gtk::Application) {
+    let window = gtk::ApplicationWindow::new(application);
+    window.set_title("Logistic Regression");
+    window.set_default_size(700, 600);
+
+    let label = gtk::Label::new(Some("Drag a file below"));
+
+    let text_view = gtk::TextView::new();
+    text_view.set_wrap_mode(gtk::WrapMode::Word);
+    text_view.set_cursor_visible(false);
+
+    let scrolled_text_view = gtk::ScrolledWindow::new(gtk::NONE_ADJUSTMENT, gtk::NONE_ADJUSTMENT);
+    scrolled_text_view.set_policy(gtk::PolicyType::Automatic, gtk::PolicyType::Automatic);
+    scrolled_text_view.add(&text_view);
+
+    let targets = vec![gtk::TargetEntry::new(
+        "text/uri-list",
+        gtk::TargetFlags::OTHER_APP,
+        0,
+    )];
+    text_view.drag_dest_set(
+        gtk::DestDefaults::HIGHLIGHT,
+        &targets,
+        gdk::DragAction::COPY,
+    );
+
+    text_view.connect_drag_data_received(|drag_context, _, _, _, selection_data, _, _| {
+        let buffer = drag_context.get_buffer().unwrap();
+        let file_uris = selection_data.get_uris();
+
+        if file_uris.len() != 1 {
+            panic!("Multiple files found");
+        }
+
+        let file = file_uris[0].to_owned();
+        let file = gio::File::new_for_uri(&file);
+
+        let cancellable = gio::Cancellable::new();
+        let file_bytes = file.load_contents(Some(&cancellable)).unwrap().0;
+        let file_contents = str::from_utf8(&file_bytes).unwrap();
+
+        buffer.set_text(file_contents);
+    });
+
+    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    vbox.set_border_width(5);
+    vbox.pack_start(&label, false, false, 0);
+    vbox.pack_start(&scrolled_text_view, true, true, 0);
+
+    window.add(&vbox);
+    window.show_all();
+}

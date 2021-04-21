@@ -1,0 +1,14 @@
+[package]
+authors = ["Archit Bhonsle <abhonsle2000@gmail.com>"]
+description = "A simple app to experiment with GTK with Rust"
+edition = "2018"
+license = "MIT"
+name = "gtk-rs-experiment"
+version = "0.1.0"
+
+[dependencies]
+futures = "0.3"
+gdk = "0.13"
+gio = "0.9"
+glib = "0.10"
+gtk = "0.9"
