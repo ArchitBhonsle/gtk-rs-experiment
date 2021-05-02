@@ -2,6 +2,22 @@ use gio::prelude::*;
 use gtk::prelude::*;
 use polars::prelude::*;
 
+pub fn wrap_in_header(title: &str, subtitle: &str, content: &gtk::Box) -> gtk::Box {
+    let vbox = gtk::BoxBuilder::new()
+        .orientation(gtk::Orientation::Vertical)
+        .build();
+
+    let header = gtk::HeaderBarBuilder::new()
+        .title(title)
+        .subtitle(subtitle)
+        .build();
+
+    vbox.pack_start(&header, false, false, 0);
+    vbox.pack_start(content, true, true, 0);
+
+    vbox
+}
+
 pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
     let dtypes = vec![f64::static_type(); dataframe.width()];
     let store = gtk::TreeStore::new(&dtypes);
@@ -27,9 +43,22 @@ pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
         store.set(&store.append(None), &columns, &row);
     }
 
-    let tree_view = gtk::TreeView::with_model(&store);
+    let tree_view = gtk::TreeViewBuilder::new()
+        .enable_grid_lines(gtk::TreeViewGridLines::Both)
+        .model(&store)
+        .build();
+
+    let renderer = gtk::CellRendererTextBuilder::new()
+        .foreground_rgba(&gdk::RGBA {
+            red: 0.8,
+            blue: 0.8,
+            green: 0.8,
+            alpha: 1.0,
+        })
+        .xalign(1.0)
+        .build();
+
     for (idx, header) in dataframe.get_column_names().into_iter().enumerate() {
-        let renderer = gtk::CellRendererText::new();
         let column = gtk::TreeViewColumn::new();
         column.pack_start(&renderer, true);
         column.set_title(header);
