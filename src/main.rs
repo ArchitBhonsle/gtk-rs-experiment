@@ -9,7 +9,6 @@ mod utils;
 
 use gio::prelude::*;
 use pages::Pages;
-use std::cell::RefCell;
 
 use std::env;
 
@@ -25,8 +24,6 @@ fn main() {
     application.run(&env::args().collect::<Vec<_>>());
 }
 
-thread_local! {static PAGE: RefCell<Pages> = RefCell::new(Pages::Choose)}
-
 fn build_ui(application: &gtk::Application) {
     let window = gtk::ApplicationWindowBuilder::new()
         .application(application)
@@ -35,15 +32,5 @@ fn build_ui(application: &gtk::Application) {
         .default_width(1400)
         .build();
 
-    PAGE.with(|f| {
-        let mut current_page = f.borrow_mut();
-        match *current_page {
-            Pages::Choose => {
-                *current_page = pages::choose::processing_page(window);
-            }
-            Pages::Processing => {}
-            Pages::Train => {}
-            Pages::Test => {}
-        }
-    });
+    pages::paint(&window);
 }

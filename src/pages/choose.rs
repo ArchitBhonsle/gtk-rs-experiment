@@ -1,10 +1,17 @@
-use super::Pages;
+use super::{paint, Pages};
 use crate::utils;
 use gio::prelude::*;
 use gtk::prelude::*;
-use polars::io::prelude::*;
+use polars::prelude::*;
 
-pub fn processing_page(window: gtk::ApplicationWindow) -> super::Pages {
+use std::cell::RefCell;
+use std::rc::Rc;
+
+pub fn choose_page(
+    window: &gtk::ApplicationWindow,
+    page_cell: Rc<RefCell<Pages>>,
+    df_cell: Rc<RefCell<Option<DataFrame>>>,
+) {
     let vbox = gtk::BoxBuilder::new()
         .orientation(gtk::Orientation::Vertical)
         .margin(10)
@@ -30,6 +37,7 @@ pub fn processing_page(window: gtk::ApplicationWindow) -> super::Pages {
                     .has_header(true)
                     .finish()
                     .unwrap();
+            *df_cell.borrow_mut() = Some(dataframe.clone());
 
             let tree_view = utils::create_tree_view(&dataframe);
             tree_view.show();
@@ -39,6 +47,12 @@ pub fn processing_page(window: gtk::ApplicationWindow) -> super::Pages {
     });
 
     let next_page_button = gtk::ButtonBuilder::new().label("Preprocessing").build();
+    let window_clone = window.clone();
+    next_page_button.connect_clicked(move |_button_closure| {
+        *page_cell.borrow_mut() = Pages::Processing;
+
+        paint(&window_clone);
+    });
     vbox.pack_start(&next_page_button, false, false, 0);
 
     window.add(&utils::wrap_in_header(
@@ -47,8 +61,6 @@ pub fn processing_page(window: gtk::ApplicationWindow) -> super::Pages {
         &vbox,
     ));
     window.show_all();
-
-    Pages::Choose
 }
 
 pub fn create_file_chooser() -> gtk::FileChooserButton {

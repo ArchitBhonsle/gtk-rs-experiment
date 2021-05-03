@@ -69,3 +69,10 @@ pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
 
     tree_view
 }
+
+pub fn clear_window(widget: &gtk::ApplicationWindow) {
+    let children = widget.get_children();
+    unsafe {
+        children.iter().for_each(|x| x.destroy());
+    }
+}
