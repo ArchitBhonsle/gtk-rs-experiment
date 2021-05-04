@@ -8,8 +8,6 @@ mod pages;
 mod utils;
 
 use gio::prelude::*;
-use pages::Pages;
-
 use std::env;
 
 fn main() {

@@ -59,18 +59,21 @@ pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
         .build();
 
     for (idx, header) in dataframe.get_column_names().into_iter().enumerate() {
-        let column = gtk::TreeViewColumn::new();
+        let column = gtk::TreeViewColumnBuilder::new()
+            .title(header)
+            .sizing(gtk::TreeViewColumnSizing::Autosize)
+            .sort_column_id(idx as i32)
+            .build();
         column.pack_start(&renderer, true);
-        column.set_title(header);
         column.add_attribute(&renderer, "text", idx as i32);
-        column.set_sort_column_id(idx as i32);
+
         tree_view.append_column(&column);
     }
 
     tree_view
 }
 
-pub fn clear_window(widget: &gtk::ApplicationWindow) {
+pub fn kill_children<T: IsA<gtk::Container>>(widget: &T) {
     let children = widget.get_children();
     unsafe {
         children.iter().for_each(|x| x.destroy());

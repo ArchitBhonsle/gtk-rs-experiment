@@ -4,7 +4,8 @@ pub mod test;
 pub mod train;
 
 use crate::utils;
-use gtk::prelude::*;
+use glib::IsA;
+use gtk::Container;
 use polars::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -21,7 +22,7 @@ pub enum Pages {
 }
 
 pub fn paint(window: &gtk::ApplicationWindow) {
-    utils::clear_window(&window);
+    utils::kill_children(window);
 
     PAGE.with(|p| {
         DF.with(|d| {

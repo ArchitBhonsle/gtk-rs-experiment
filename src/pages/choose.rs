@@ -26,8 +26,9 @@ pub fn choose_page(
         .hscrollbar_policy(gtk::PolicyType::Automatic)
         .build();
     vbox.pack_start(&scroll_window, true, true, 0);
-    let scroll_window_clone = scroll_window.clone();
 
+    let scroll_window_clone = scroll_window.clone();
+    let df_cell_cloned = Rc::clone(&df_cell);
     file_chooser.connect_file_set(move |file_chooser_closure| {
         if let Some(file) = file_chooser_closure.get_file() {
             let dataframe =
@@ -37,7 +38,7 @@ pub fn choose_page(
                     .has_header(true)
                     .finish()
                     .unwrap();
-            *df_cell.borrow_mut() = Some(dataframe.clone());
+            *df_cell_cloned.borrow_mut() = Some(dataframe.clone());
 
             let tree_view = utils::create_tree_view(&dataframe);
             tree_view.show();
@@ -47,13 +48,18 @@ pub fn choose_page(
     });
 
     let next_page_button = gtk::ButtonBuilder::new().label("Preprocessing").build();
+    vbox.pack_start(&next_page_button, false, false, 0);
+
     let window_clone = window.clone();
-    next_page_button.connect_clicked(move |_button_closure| {
-        *page_cell.borrow_mut() = Pages::Processing;
+    let df_cell_cloned = Rc::clone(&df_cell);
+    next_page_button.connect_clicked(move |_| {
+        *page_cell.borrow_mut() = match *df_cell_cloned.borrow() {
+            Some(_) => Pages::Processing,
+            None => Pages::Choose,
+        };
 
         paint(&window_clone);
     });
-    vbox.pack_start(&next_page_button, false, false, 0);
 
     window.add(&utils::wrap_in_header(
         "Choose a file",
