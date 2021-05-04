@@ -7,7 +7,7 @@ use polars::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn choose_page(
+pub fn render_page(
     window: &gtk::ApplicationWindow,
     page_cell: Rc<RefCell<Pages>>,
     df_cell: Rc<RefCell<Option<DataFrame>>>,

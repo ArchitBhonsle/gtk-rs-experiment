@@ -1,4 +1,4 @@
-use super::Pages;
+use super::{paint, Pages};
 use crate::utils;
 use gtk::prelude::*;
 use polars::prelude::*;
@@ -6,7 +6,7 @@ use polars::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn processing_page(
+pub fn render_page(
     window: &gtk::ApplicationWindow,
     page_cell: Rc<RefCell<Pages>>,
     df_cell: Rc<RefCell<Option<DataFrame>>>,
@@ -17,8 +17,8 @@ pub fn processing_page(
         .spacing(10)
         .build();
 
-    let normalize = gtk::ButtonBuilder::new().label("Normalize").build();
-    vbox.pack_start(&normalize, false, false, 0);
+    let normalize_button = gtk::ButtonBuilder::new().label("Normalize").build();
+    vbox.pack_start(&normalize_button, false, false, 0);
 
     let scroll_window = gtk::ScrolledWindowBuilder::new()
         .vscrollbar_policy(gtk::PolicyType::Automatic)
@@ -33,7 +33,7 @@ pub fn processing_page(
 
     let scroll_window_clone = scroll_window.clone();
     let df_cell_cloned = Rc::clone(&df_cell);
-    normalize.connect_clicked(move |_| {
+    normalize_button.connect_clicked(move |_| {
         utils::kill_children(&scroll_window_clone);
 
         let normalized_dataframe = normalize_dataframe(df_cell_cloned.borrow().as_ref().unwrap());
@@ -45,6 +45,11 @@ pub fn processing_page(
     });
 
     let next_page_button = gtk::ButtonBuilder::new().label("Train").build();
+    let window_clone = window.clone();
+    next_page_button.connect_clicked(move |_| {
+        *page_cell.borrow_mut() = Pages::Model;
+        paint(&window_clone);
+    });
     vbox.pack_start(&next_page_button, false, false, 0);
 
     window.add(&utils::wrap_in_header(
