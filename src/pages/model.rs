@@ -1,3 +1,4 @@
+use crate::ml;
 use crate::utils;
 use gtk::prelude::*;
 use polars::prelude::*;
@@ -5,7 +6,9 @@ use polars::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub fn render_page(window: &gtk::ApplicationWindow, _df_cell: Rc<RefCell<Option<DataFrame>>>) {
+pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<DataFrame>>>) {
+    let (train_set, test_set) = ml::split(df_cell.borrow().as_ref().unwrap(), 0.7);
+
     let vbox = gtk::BoxBuilder::new()
         .orientation(gtk::Orientation::Vertical)
         .margin(10)
@@ -14,6 +17,9 @@ pub fn render_page(window: &gtk::ApplicationWindow, _df_cell: Rc<RefCell<Option<
 
     let train_button = gtk::ButtonBuilder::new().label("Train").build();
     vbox.pack_start(&train_button, false, false, 0);
+    train_button.connect_clicked(move |_| {
+        ml::train(&train_set, &test_set);
+    });
 
     let training_progress = gtk::ProgressBarBuilder::new()
         .name("Hello")

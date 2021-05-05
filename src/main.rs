@@ -4,6 +4,7 @@ extern crate glib;
 extern crate gtk;
 extern crate polars;
 
+mod ml;
 mod pages;
 mod utils;
 
