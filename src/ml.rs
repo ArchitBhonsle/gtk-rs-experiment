@@ -36,19 +36,19 @@ fn sigmoid(z: Array2<f64>) -> Array2<f64> {
 fn forward_backward(
     weights: &Array2<f64>,
     bias: &f64,
-    x: &Array2<f64>,
-    y: &Array2<f64>,
+    x_train: &Array2<f64>,
+    y_train: &Array2<f64>,
 ) -> (f64, Array2<f64>, f64) {
     // forward
-    let y_head: Array2<f64> = sigmoid(weights.t().dot(x).mapv(|x| x + bias));
-    let loss = (y * &(y_head.mapv(|z| z.ln()))
-        + &((y.mapv(|z| 1. - z)) * &y_head.mapv(|z| (1. - z).ln())))
+    let y_head: Array2<f64> = sigmoid(weights.t().dot(x_train).mapv(|x| x + bias));
+    let loss = (y_train * &(y_head.mapv(|z| z.ln()))
+        + &((y_train.mapv(|z| 1. - z)) * &y_head.mapv(|z| (1. - z).ln())))
         .mapv(|z| -1. * z);
-    let cost = loss.sum() / x.ncols() as f64;
+    let cost = loss.sum() / x_train.ncols() as f64;
 
     // backward
-    let d_weights = (x * &(&y_head - y).t()).mapv(|z| z / x.ncols() as f64);
-    let d_bias = (&y_head - y).sum() / x.ncols() as f64;
+    let d_weights = (x_train.dot(&(&y_head - y_train).t())).mapv(|z| z / x_train.ncols() as f64);
+    let d_bias = (&y_head - y_train).sum() / x_train.ncols() as f64;
 
     (cost, d_weights, d_bias)
 }
@@ -56,8 +56,8 @@ fn forward_backward(
 fn update(
     weights: Array2<f64>,
     bias: f64,
-    x: Array2<f64>,
-    y: Array2<f64>,
+    x_train: Array2<f64>,
+    y_train: Array2<f64>,
     learning_rate: f64,
     iterations: usize,
 ) -> (Vec<f64>, Array2<f64>, f64) {
@@ -66,7 +66,7 @@ fn update(
     let mut bias = bias;
 
     for _ in 0..iterations {
-        let (cost, d_weight, d_bias) = forward_backward(&weights, &bias, &x, &y);
+        let (cost, d_weight, d_bias) = forward_backward(&weights, &bias, &x_train, &y_train);
         weights -= &d_weight.mapv(|x| learning_rate * x);
         bias -= learning_rate * d_bias;
 
@@ -77,7 +77,7 @@ fn update(
 }
 
 fn predict(weights: &Array2<f64>, bias: f64, x_test: &Array2<f64>) -> Array2<f64> {
-    sigmoid((&weights.t() * x_test).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
+    sigmoid((&weights.t().dot(x_test)).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
 }
 
 fn logistic_regression(
@@ -95,15 +95,17 @@ fn logistic_regression(
 
     let y_pred = predict(&weights, bias, &x_test);
 
-    println!("{:?}", costs);
-    println!("{:#?} {:#?}", y_test.shape(), y_pred.shape());
+    println!(
+        "Accuracy: {:#?}",
+        100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
+    );
 }
 
 pub fn train(train_set: &Array2<f64>, test_set: &Array2<f64>) {
-    let x_train: Array2<f64> = train_set.slice(s![.., ..-2]).t().to_owned();
+    let x_train: Array2<f64> = train_set.slice(s![.., ..-1]).t().to_owned();
     let y_train: Array2<f64> = train_set.slice(s![.., -1..]).t().to_owned();
 
-    let x_test: Array2<f64> = test_set.slice(s![.., ..-2]).t().to_owned();
+    let x_test: Array2<f64> = test_set.slice(s![.., ..-1]).t().to_owned();
     let y_test: Array2<f64> = test_set.slice(s![.., -1..]).t().to_owned();
 
     logistic_regression(x_train, y_train, x_test, y_test, 1., 100);
