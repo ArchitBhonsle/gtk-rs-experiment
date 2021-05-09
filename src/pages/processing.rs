@@ -44,7 +44,7 @@ pub fn render_page(
         scroll_window.add(&tree_view);
     });
 
-    let next_page_button = gtk::ButtonBuilder::new().label("Train").build();
+    let next_page_button = gtk::ButtonBuilder::new().label("Model").build();
     let window_clone = window.clone();
     next_page_button.connect_clicked(move |_| {
         *page_cell.borrow_mut() = Pages::Model;
@@ -70,7 +70,7 @@ fn normalize_dataframe(df: &DataFrame) -> DataFrame {
                 Series::new(
                     series.name(),
                     series
-                        .cast_with_datatype(&datatypes::DataType::Float64)
+                        .cast_with_dtype(&datatypes::DataType::Float64)
                         .unwrap()
                         .f64()
                         .unwrap()

@@ -79,3 +79,10 @@ pub fn kill_children<T: IsA<gtk::Container>>(widget: &T) {
         children.iter().for_each(|x| x.destroy());
     }
 }
+
+pub fn get_text(buffer: gtk::TextBuffer) -> String {
+    buffer
+        .get_text(&buffer.get_start_iter(), &buffer.get_end_iter(), false)
+        .unwrap()
+        .to_string()
+}

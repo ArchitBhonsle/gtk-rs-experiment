@@ -13,5 +13,7 @@ gio = "0.9"
 glib = "0.10"
 gtk = "0.9"
 ndarray = {version = "0.13"}
-polars = {version = "0.12", git = "https://github.com/ritchie46/polars", features = ["ndarray"]}
+plotters = "0.3"
+plotters-cairo = "0.3"
+polars = {version = "0.13", git = "https://github.com/ritchie46/polars", features = ["ndarray"]}
 rand = "0.8.3"

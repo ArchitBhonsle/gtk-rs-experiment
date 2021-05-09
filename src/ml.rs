@@ -76,37 +76,24 @@ fn update(
     (costs, weights, bias)
 }
 
-fn predict(weights: &Array2<f64>, bias: f64, x_test: &Array2<f64>) -> Array2<f64> {
+fn predict(weights: &Array2<f64>, bias: &f64, x_test: &Array2<f64>) -> Array2<f64> {
     sigmoid((&weights.t().dot(x_test)).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
 }
 
-fn logistic_regression(
-    x_train: Array2<f64>,
-    y_train: Array2<f64>,
-    x_test: Array2<f64>,
-    y_test: Array2<f64>,
+pub fn train(
+    train_set: &Array2<f64>,
     learning_rate: f64,
     iterations: usize,
-) {
-    let weights = Array2::from_elem([x_train.nrows(), 1], 0.01);
-    let bias = 0.0;
-
-    let (costs, weights, bias) = update(weights, bias, x_train, y_train, learning_rate, iterations);
-
-    let y_pred = predict(&weights, bias, &x_test);
-
-    println!(
-        "Accuracy: {:#?}",
-        100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
-    );
-}
-
-pub fn train(train_set: &Array2<f64>, test_set: &Array2<f64>) {
+) -> (Vec<f64>, Array2<f64>, f64) {
     let x_train: Array2<f64> = train_set.slice(s![.., ..-1]).t().to_owned();
     let y_train: Array2<f64> = train_set.slice(s![.., -1..]).t().to_owned();
 
-    let x_test: Array2<f64> = test_set.slice(s![.., ..-1]).t().to_owned();
-    let y_test: Array2<f64> = test_set.slice(s![.., -1..]).t().to_owned();
+    let weights = Array2::from_elem([x_train.nrows(), 1], 0.01);
+    let bias = 0.0;
 
-    logistic_regression(x_train, y_train, x_test, y_test, 1., 100);
+    update(weights, bias, x_train, y_train, learning_rate, iterations)
+}
+
+pub fn accuracy(y_test: &Array2<f64>, y_pred: &Array2<f64>) -> f64 {
+    100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
 }
