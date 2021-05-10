@@ -76,10 +76,6 @@ fn update(
     (costs, weights, bias)
 }
 
-fn predict(weights: &Array2<f64>, bias: &f64, x_test: &Array2<f64>) -> Array2<f64> {
-    sigmoid((&weights.t().dot(x_test)).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
-}
-
 pub fn train(
     train_set: &Array2<f64>,
     learning_rate: f64,
@@ -94,6 +90,31 @@ pub fn train(
     update(weights, bias, x_train, y_train, learning_rate, iterations)
 }
 
-pub fn accuracy(y_test: &Array2<f64>, y_pred: &Array2<f64>) -> f64 {
+fn predict(weights: &Array2<f64>, bias: &f64, x_test: &Array2<f64>) -> Array2<f64> {
+    sigmoid((&weights.t().dot(x_test)).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
+}
+
+fn get_accuracy(y_test: &Array2<f64>, y_pred: &Array2<f64>) -> f64 {
     100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
+}
+
+pub fn make_prediction(
+    test_set: &Array2<f64>,
+    weights: &Array2<f64>,
+    bias: &f64,
+) -> (DataFrame, f64) {
+    let x_test: Array2<f64> = test_set.slice(s![.., ..-1]).t().to_owned();
+    let y_test: Array2<f64> = test_set.slice(s![.., -1..]).t().to_owned();
+    let y_pred = predict(weights, bias, &x_test);
+
+    let real_values = y_test.row(0).to_vec();
+    let predictions = y_pred.row(0).to_vec();
+
+    let real_values = Series::new("Actual Values", real_values);
+    let predictions = Series::new("Predictions", predictions);
+
+    let df = DataFrame::new(vec![real_values, predictions]).unwrap();
+    let accuracy = get_accuracy(&y_test, &y_pred);
+
+    (df, accuracy)
 }

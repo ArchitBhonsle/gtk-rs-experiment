@@ -1,6 +1,7 @@
 use crate::ml;
 use crate::utils;
 use gtk::prelude::*;
+use ndarray::prelude::*;
 use plotters::prelude::*;
 use polars::prelude::DataFrame;
 
@@ -9,6 +10,8 @@ use std::rc::Rc;
 
 pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<DataFrame>>>) {
     let (train_set, test_set) = ml::split(df_cell.borrow().as_ref().unwrap(), 0.7);
+    let weights: Rc<RefCell<Option<Array2<f64>>>> = Rc::new(RefCell::new(None));
+    let bias: Rc<RefCell<Option<f64>>> = Rc::new(RefCell::new(None));
 
     let vbox = gtk::BoxBuilder::new()
         .orientation(gtk::Orientation::Vertical)
@@ -33,7 +36,7 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
         1,
     );
     let lr_text = gtk::TextViewBuilder::new()
-        .buffer(&gtk::TextBufferBuilder::new().text("1.").build())
+        .buffer(&gtk::TextBufferBuilder::new().text("1").build())
         .hexpand(true)
         .border_width(5)
         .build();
@@ -58,6 +61,8 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
     let graph_box = gtk::BoxBuilder::new().build();
     let graph_box_clone = graph_box.clone();
     let train_button = gtk::ButtonBuilder::new().label("Train").build();
+    let weights_cloned = Rc::clone(&weights);
+    let bias_cloned = Rc::clone(&bias);
     train_button.connect_clicked(move |_| {
         let lr = utils::get_text(lr_text.get_buffer().unwrap())
             .parse::<f64>()
@@ -66,7 +71,10 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
             .parse::<usize>()
             .unwrap();
 
-        let (costs, weights, bias) = ml::train(&train_set, lr, iterations);
+        let (costs, trained_weights, trained_bias) = ml::train(&train_set, lr, iterations);
+        RefCell::replace(&weights_cloned, Some(trained_weights));
+        RefCell::replace(&bias_cloned, Some(trained_bias));
+
         draw_costs_graph(&graph_box_clone, costs, iterations);
     });
     vbox.pack_start(&train_button, false, false, 0);
@@ -77,11 +85,57 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
     let test_button = gtk::ButtonBuilder::new().label("Test").build();
     vbox.pack_start(&test_button, false, false, 0);
 
-    let scroll_window = gtk::ScrolledWindowBuilder::new()
+    let diff_window = gtk::ScrolledWindowBuilder::new()
         .vscrollbar_policy(gtk::PolicyType::Automatic)
         .hscrollbar_policy(gtk::PolicyType::Automatic)
         .build();
-    vbox.pack_start(&scroll_window, true, true, 0);
+    vbox.pack_start(&diff_window, true, true, 0);
+
+    let accuracy_box = gtk::GridBuilder::new()
+        .row_spacing(10)
+        .column_spacing(10)
+        .hexpand(true)
+        .build();
+    vbox.pack_start(&accuracy_box, false, false, 0);
+
+    accuracy_box.attach(
+        &gtk::LabelBuilder::new().label("Accuracy").build(),
+        0,
+        0,
+        1,
+        1,
+    );
+    let accuracy_text = gtk::TextViewBuilder::new()
+        .buffer(&gtk::TextBufferBuilder::new().text("-").build())
+        .border_width(5)
+        .editable(false)
+        .build();
+    accuracy_box.attach(&accuracy_text, 1, 0, 1, 1);
+
+    // TODO precision, recall and f1
+
+    let weights_cloned = weights.clone();
+    let bias_cloned = bias.clone();
+    test_button.connect_clicked(move |_| {
+        let trained_weights = weights_cloned.borrow();
+        let trained_weights = trained_weights.as_ref().unwrap();
+        let trained_bias = bias_cloned.borrow();
+        let trained_bias = trained_bias.as_ref().unwrap();
+
+        let (df, acc) = ml::make_prediction(&test_set, &trained_weights, &trained_bias);
+
+        let tree_view = utils::create_tree_view(&df);
+        tree_view.show();
+
+        diff_window.add(&tree_view);
+
+        accuracy_text
+            .get_buffer()
+            .unwrap()
+            .set_text(&format!("{:.3}", acc));
+    });
+
+    // Window
 
     window.add(&utils::wrap_in_header(
         "Model",

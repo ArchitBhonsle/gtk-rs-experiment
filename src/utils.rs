@@ -61,7 +61,7 @@ pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
     for (idx, header) in dataframe.get_column_names().into_iter().enumerate() {
         let column = gtk::TreeViewColumnBuilder::new()
             .title(header)
-            .sizing(gtk::TreeViewColumnSizing::Autosize)
+            .expand(true)
             .sort_column_id(idx as i32)
             .build();
         column.pack_start(&renderer, true);
