@@ -94,15 +94,42 @@ fn predict(weights: &Array2<f64>, bias: &f64, x_test: &Array2<f64>) -> Array2<f6
     sigmoid((&weights.t().dot(x_test)).mapv(|z| z + bias)).mapv(|z| if z <= 0.5 { 0. } else { 1. })
 }
 
-fn get_accuracy(y_test: &Array2<f64>, y_pred: &Array2<f64>) -> f64 {
-    100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
+fn metrics(y_test: &Array2<f64>, y_pred: &Array2<f64>) -> (f64, f64, f64, f64) {
+    // 100. - (y_pred - y_test).mapv(|z| z.abs() * 100.).mean().unwrap()
+
+    let (mut true_positive, mut false_positive, mut true_negative, mut false_negative) =
+        (0., 0., 0., 0.);
+
+    y_test.iter().zip(y_pred.iter()).for_each(|(test, pred)| {
+        if *test == *pred {
+            if *test == 1. {
+                true_positive += 1.;
+            } else {
+                true_negative += 1.;
+            }
+        } else {
+            if *test == 1. {
+                false_positive += 1.;
+            } else {
+                false_negative += 1.;
+            }
+        }
+    });
+
+    let accuracy = (true_positive + true_negative)
+        / (true_positive + true_negative + false_positive + false_negative);
+    let precision = true_positive / (true_positive + false_positive);
+    let recall = true_positive / (true_positive + false_negative);
+    let f1_score = 2. * ((precision * recall) / (precision + recall));
+
+    (accuracy, precision, recall, f1_score)
 }
 
 pub fn make_prediction(
     test_set: &Array2<f64>,
     weights: &Array2<f64>,
     bias: &f64,
-) -> (DataFrame, f64) {
+) -> (DataFrame, (f64, f64, f64, f64)) {
     let x_test: Array2<f64> = test_set.slice(s![.., ..-1]).t().to_owned();
     let y_test: Array2<f64> = test_set.slice(s![.., -1..]).t().to_owned();
     let y_pred = predict(weights, bias, &x_test);
@@ -113,8 +140,8 @@ pub fn make_prediction(
     let real_values = Series::new("Actual Values", real_values);
     let predictions = Series::new("Predictions", predictions);
 
-    let df = DataFrame::new(vec![real_values, predictions]).unwrap();
-    let accuracy = get_accuracy(&y_test, &y_pred);
-
-    (df, accuracy)
+    (
+        DataFrame::new(vec![real_values, predictions]).unwrap(),
+        metrics(&y_test, &y_pred),
+    )
 }

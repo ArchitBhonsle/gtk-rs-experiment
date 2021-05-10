@@ -91,28 +91,19 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
         .build();
     vbox.pack_start(&diff_window, true, true, 0);
 
-    let accuracy_box = gtk::GridBuilder::new()
+    // Metrics
+
+    let metrics_box = gtk::GridBuilder::new()
         .row_spacing(10)
         .column_spacing(10)
         .hexpand(true)
         .build();
-    vbox.pack_start(&accuracy_box, false, false, 0);
+    vbox.pack_start(&metrics_box, false, false, 0);
 
-    accuracy_box.attach(
-        &gtk::LabelBuilder::new().label("Accuracy").build(),
-        0,
-        0,
-        1,
-        1,
-    );
-    let accuracy_text = gtk::TextViewBuilder::new()
-        .buffer(&gtk::TextBufferBuilder::new().text("-").build())
-        .border_width(5)
-        .editable(false)
-        .build();
-    accuracy_box.attach(&accuracy_text, 1, 0, 1, 1);
-
-    // TODO precision, recall and f1
+    let accuracy_buf = add_label_and_text(&metrics_box, "Accuracy", 0, 0);
+    let precision_buf = add_label_and_text(&metrics_box, "Precision", 1, 0);
+    let recall_buf = add_label_and_text(&metrics_box, "Recall", 0, 1);
+    let f1_score_buf = add_label_and_text(&metrics_box, "F1 Score", 1, 1);
 
     let weights_cloned = weights.clone();
     let bias_cloned = bias.clone();
@@ -122,17 +113,18 @@ pub fn render_page(window: &gtk::ApplicationWindow, df_cell: Rc<RefCell<Option<D
         let trained_bias = bias_cloned.borrow();
         let trained_bias = trained_bias.as_ref().unwrap();
 
-        let (df, acc) = ml::make_prediction(&test_set, &trained_weights, &trained_bias);
+        let (df, (accuracy, precision, recall, f1_score)) =
+            ml::make_prediction(&test_set, &trained_weights, &trained_bias);
 
         let tree_view = utils::create_tree_view(&df);
         tree_view.show();
 
         diff_window.add(&tree_view);
 
-        accuracy_text
-            .get_buffer()
-            .unwrap()
-            .set_text(&format!("{:.3}", acc));
+        accuracy_buf.set_text(&format!("{:.3}", accuracy));
+        precision_buf.set_text(&format!("{:.3}", precision));
+        recall_buf.set_text(&format!("{:.3}", recall));
+        f1_score_buf.set_text(&format!("{:.3}", f1_score));
     });
 
     // Window
@@ -200,4 +192,26 @@ fn draw_costs_graph(container: &gtk::Box, costs: Vec<f64>, iterations: usize) {
     });
 
     container.show_all();
+}
+
+fn add_label_and_text(grid: &gtk::Grid, label: &str, x: i32, y: i32) -> gtk::TextBuffer {
+    grid.attach(
+        &gtk::LabelBuilder::new()
+            .label(label)
+            .halign(gtk::Align::Start)
+            .build(),
+        x * 2,
+        y,
+        1,
+        1,
+    );
+    let text = gtk::TextViewBuilder::new()
+        .buffer(&gtk::TextBufferBuilder::new().text("-").build())
+        .border_width(5)
+        .hexpand(true)
+        .editable(false)
+        .build();
+    grid.attach(&text, x * 2 + 1, y, 1, 1);
+
+    text.get_buffer().unwrap()
 }
