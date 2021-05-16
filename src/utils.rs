@@ -48,15 +48,7 @@ pub fn create_tree_view(dataframe: &polars::frame::DataFrame) -> gtk::TreeView {
         .model(&store)
         .build();
 
-    let renderer = gtk::CellRendererTextBuilder::new()
-        .foreground_rgba(&gdk::RGBA {
-            red: 0.8,
-            blue: 0.8,
-            green: 0.8,
-            alpha: 1.0,
-        })
-        .xalign(1.0)
-        .build();
+    let renderer = gtk::CellRendererTextBuilder::new().xalign(1.0).build();
 
     for (idx, header) in dataframe.get_column_names().into_iter().enumerate() {
         let column = gtk::TreeViewColumnBuilder::new()
