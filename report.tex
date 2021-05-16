@@ -1,7 +1,7 @@
 \documentclass[12pt, a4]{article}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
-\usepackage[a4paper, total={16cm, 24cm}]{geometry}
+\usepackage[a4paper, total={16cm, 22cm}]{geometry}
 
 \usepackage{graphicx}
 \graphicspath{ {./screenshots/} }
@@ -14,9 +14,6 @@
 \rfoot{\thepage}
 
 \usepackage{hyperref}
-\makeatletter
-\g@addto@macro{\UrlBreaks}{\UrlOrds}
-\makeatother
 \usepackage[section]{placeins}
 
 \title{
@@ -261,29 +258,26 @@ decreasing. This is known as an ``adaptive learning rate''.
 
 Regardless of the operating system you're on you might need a dataset to test
 this on. The app only supports datasets with numeric columns so other datasets
-might crash the app.
-
-\begin{enumerate}
-  \item{Go to \href{https://raw.githubusercontent.com/ArchitBhonsle/gtk-rs-experiment/main/data/heart.csv}{this}
-        link.}
-  \item{Right click on the page and select ``Save as''} and save it in the location of you choice.
-\end{enumerate}
+might crash the app. To download \texttt{heart.csv} used in this report, click
+on
+\href{https://downgit.github.io/#/home?url=https://github.com/ArchitBhonsle/gtk-rs-experiment/blob/main/data/heart.csv}{this} link.
 
 \subsection{Linux}
 
 \begin{enumerate}
-  \item{Go to \href{https://github.com/ArchitBhonsle/gtk-rs-experiment/blob/main/linux-executable?raw=true}{this}
+  \item{Go to \href{https://downgit.github.io/#/home?url=https://github.com/ArchitBhonsle/gtk-rs-experiment/blob/main/linux-executable}{this}
         link.}
-  \item{Right click on the page and select ``Save as'' and save it in the location of you choice.}
   \item{Double click on the downloaded executable.}
 \end{enumerate}
 
 \subsection{Windows}
 
 \begin{enumerate}
-  \item{Go \href{https://download-directory.github.io/}{here}.}
-  \item{Input this link: \url{https://github.com/ArchitBhonsle/gtk-rs-experiment/windows-package} and press Enter. This will download the folder.}
-  \item{In this folder double click on the \texttt{gtk-rs-experiment.exe}.}
+  \item{Go
+        \href {https://downgit.github.io/#/home?url=https://github.com/ArchitBhonsle/gtk-rs-experiment/tree/main/windows-package}
+        {here}.}
+  \item{In the downloaded folder double click on the
+        \texttt{gtk-rs-experiment.exe}.}
 \end{enumerate}
 
 \end{document}
