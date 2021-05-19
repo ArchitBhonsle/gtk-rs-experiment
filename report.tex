@@ -9,7 +9,7 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{Data Mining and Business Intelligence}
+\lhead{Business Intelligence Lab}
 \rhead{Mini Project}
 \rfoot{\thepage}
 
@@ -105,7 +105,7 @@ And thus in gradient descent, which is basically applying this repeatedly:
   \alpha \frac{\delta}{\delta\theta_{j}} J(\theta)
 \]
 
-becomes after resolving the derivative using calculus:
+After resolving the derivative using calculus the equation becomes:
 
 \[
   \theta_{j} := \theta_{j} -
@@ -146,7 +146,7 @@ fn forward_backward(
 
 Here, \texttt{y\_head} is $h_{\theta}(x^{(i)})$ or the hypothesis. \texttt{loss}
 is $J(\theta)$ and \texttt{cost} is the average loss. This comprises the
-``forward'' step. In the backward step we calculate the change in the weights,
+``forward'' step. In the ``backward'' step we calculate the change in the weights,
 \texttt{d\_weights} and the change in bias as \texttt{d\_bias}.
 
 These values are then used by the \texttt{update} function which tweaks the
